@@ -668,10 +668,14 @@ const DEFAULT_ARTEN = [
 ];
 
 async function loadTypes() {
-  const snap = await getDoc(doc(db, 'settings', 'fahrstundenarten'));
-  if (snap.exists() && snap.data().arten && snap.data().arten.length) {
-    fahrstundenarten = snap.data().arten;
-  } else {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'fahrstundenarten'));
+    if (snap.exists() && snap.data().arten && snap.data().arten.length) {
+      fahrstundenarten = snap.data().arten;
+    } else {
+      fahrstundenarten = DEFAULT_ARTEN;
+    }
+  } catch(e) {
     fahrstundenarten = DEFAULT_ARTEN;
   }
   injectTypeBadgeStyles();
@@ -981,7 +985,7 @@ pages['admin-fuhrpark'] = async function(el) {
         <div class="field"><label>Farbe (optional)</label><input id="ac-farbe" type="text" placeholder="Schwarz"></div>
         <div class="field"><label>Notizen (optional)</label><input id="ac-notiz" type="text" placeholder="Schaltgetriebe, …"></div>
       </div>
-      <button class="btn btn-primary" onclick="addAuto()">Auto hinzufügen</button>
+      <button class="btn btn-primary" onclick="addAuto()">+ Auto hinzufügen</button>
     </div>
     <div class="card"><div class="card-title">Alle Fahrzeuge</div><div id="auto-list"><div class="spinner"></div></div></div>
   </div>`;
