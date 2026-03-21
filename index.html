@@ -1692,12 +1692,155 @@ pages['admin-lehrer'] = async function(el) {
   const snap = await getDocs(query(collection(db,'users'), where('role','==','lehrer'), where('approved','==',true)));
   const ll = document.getElementById('lehrer-list');
   if (snap.empty) { ll.innerHTML = '<p class="text-muted">Noch keine Fahrlehrer freigeschaltet.</p>'; return; }
-  ll.innerHTML = '<table><thead><tr><th>Name</th><th>E-Mail</th><th>Schüler</th></tr></thead><tbody>' +
+  ll.innerHTML = '<table><thead><tr><th>Name</th><th>E-Mail</th><th>Kalender</th><th>Schüler</th></tr></thead><tbody>' +
     snap.docs.map(d => {
       const u = d.data();
-      return `<tr><td>${u.fname} ${u.lname}</td><td>${u.email}</td>
-        <td><button class="btn btn-secondary btn-sm" onclick="viewLehrerSchueler('${d.id}','${u.fname} ${u.lname}')">Schüler verwalten</button></td></tr>`;
+      return `<tr>
+        <td>${u.fname} ${u.lname}</td>
+        <td>${u.email}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="viewLehrerKalender('${d.id}','${u.fname} ${u.lname}')">📅 Kalender</button></td>
+        <td><button class="btn btn-secondary btn-sm" onclick="viewLehrerSchueler('${d.id}','${u.fname} ${u.lname}')">Schüler verwalten</button></td>
+      </tr>`;
     }).join('') + '</tbody></table>';
+};
+
+window.viewLehrerKalender = async function(lehrerUid, lehrerName) {
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<div class="page active">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <button class="btn btn-secondary btn-sm" onclick="navigate('admin-lehrer')">← Zurück</button>
+      <h1 class="page-title" style="margin-bottom:0">Kalender: ${lehrerName}</h1>
+    </div>
+    <div class="card">
+      <div class="cal-header">
+        <button class="btn btn-secondary btn-sm" onclick="adminCalPrev()">◀</button>
+        <span class="cal-month" id="admin-cal-label"></span>
+        <button class="btn btn-secondary btn-sm" onclick="adminCalNext()">▶</button>
+      </div>
+      <div id="admin-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+    </div>
+  </div>`;
+
+  window._adminCalDate = new Date();
+  window._adminCalLehrerUid = lehrerUid;
+  window._adminCalLehrerName = lehrerName;
+  await renderAdminCal();
+};
+
+window.adminCalPrev = function() {
+  window._adminCalDate.setMonth(window._adminCalDate.getMonth()-1);
+  renderAdminCal();
+};
+window.adminCalNext = function() {
+  window._adminCalDate.setMonth(window._adminCalDate.getMonth()+1);
+  renderAdminCal();
+};
+
+async function renderAdminCal() {
+  const label = document.getElementById('admin-cal-label');
+  const grid = document.getElementById('admin-cal-grid');
+  if (!label || !grid) return;
+
+  const year = window._adminCalDate.getFullYear();
+  const month = window._adminCalDate.getMonth();
+  const lehrerUid = window._adminCalLehrerUid;
+
+  label.textContent = new Date(year, month, 1).toLocaleDateString('de-DE', {month:'long',year:'numeric'});
+
+  const days = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  let html = days.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  const first = new Date(year, month, 1);
+  let startDow = first.getDay() - 1; if (startDow < 0) startDow = 6;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const prevDays = new Date(year, month, 0).getDate();
+
+  const [slotsSnap, blockedSnap, schuelerSnap] = await Promise.all([
+    getDocs(query(collection(db,'slots'), where('lehrerUid','==',lehrerUid))),
+    getDocs(query(collection(db,'blocked'), where('lehrerUid','==',lehrerUid))),
+    getDocs(query(collection(db,'schueler'), where('lehrerUid','==',lehrerUid)))
+  ]);
+
+  const schuelerMap = {};
+  schuelerSnap.docs.forEach(d => { const s=d.data(); schuelerMap[d.id]=s.fname+' '+s.lname; });
+
+  const slotsByDay = {};
+  slotsSnap.docs.forEach(d => {
+    const s = d.data();
+    const dt = s.startTime.toDate();
+    if (dt.getFullYear()===year && dt.getMonth()===month) {
+      const day = dt.getDate();
+      if (!slotsByDay[day]) slotsByDay[day] = [];
+      slotsByDay[day].push({id:d.id,...s});
+    }
+  });
+
+  const blockedDays = new Set();
+  blockedSnap.docs.forEach(d => { const b=d.data(); if(b.year===year&&b.month===month) blockedDays.add(b.day); });
+
+  const today = new Date();
+
+  for (let i=0; i<startDow; i++) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${prevDays-startDow+i+1}</div></div>`;
+  }
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const isToday = d===today.getDate() && month===today.getMonth() && year===today.getFullYear();
+    const isBlocked = blockedDays.has(d);
+    const slots = slotsByDay[d] || [];
+    const slotHtml = slots.slice(0,3).map(s => {
+      const studentName = s.bookedBy ? (schuelerMap[s.bookedBy]||'?') : '';
+      return `<div class="cal-slot slot-${s.type}${s.bookedBy?' slot-booked':''}" title="${studentName}">${fmtTime(s.startTime)} ${typeLabel(s.type)}${studentName?' · '+studentName:''}</div>`;
+    }).join('');
+    html += `<div class="cal-day${isToday?' today':''}${isBlocked?' blocked':''}" onclick="adminOpenDayDetail(${year},${month},${d})">
+      <div class="cal-day-num">${d}</div>
+      ${isBlocked ? '<div class="cal-slot" style="background:rgba(224,85,85,.15);color:#e05555">Gesperrt</div>' : slotHtml}
+      ${slots.length>3 ? `<div class="text-muted" style="font-size:10px">+${slots.length-3} mehr</div>`:''}
+    </div>`;
+  }
+
+  const total = startDow + daysInMonth;
+  const remainder = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i=1; i<=remainder; i++) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+window.adminOpenDayDetail = async function(year, month, day) {
+  const lehrerUid = window._adminCalLehrerUid;
+  const date = new Date(year, month, day);
+  const dateStr = date.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+
+  const [slotsSnap, schuelerSnap] = await Promise.all([
+    getDocs(query(collection(db,'slots'), where('lehrerUid','==',lehrerUid))),
+    getDocs(query(collection(db,'schueler'), where('lehrerUid','==',lehrerUid)))
+  ]);
+
+  const schuelerMap = {};
+  schuelerSnap.docs.forEach(d => { const s=d.data(); schuelerMap[d.id]=s.fname+' '+s.lname; });
+
+  const daySlots = slotsSnap.docs.filter(d => {
+    const dt = d.data().startTime.toDate();
+    return dt.getFullYear()===year && dt.getMonth()===month && dt.getDate()===day;
+  });
+
+  const slotsHtml = daySlots.length ? daySlots.map(d => {
+    const s = d.data();
+    const studentName = s.bookedBy ? (schuelerMap[s.bookedBy]||'Unbekannt') : null;
+    return `<div class="slot-row">
+      <div class="slot-time">${fmtTime(s.startTime)} – ${fmtTime(s.endTime)}</div>
+      <div class="slot-info">
+        ${typeBadgeHtml(s.type)}
+        ${studentName ? `<div class="slot-student">👤 ${studentName}</div>` : '<div class="slot-student" style="color:var(--accent)">Frei</div>'}
+      </div>
+    </div>`;
+  }).join('') : '<p class="text-muted">Keine Slots für diesen Tag.</p>';
+
+  openModal(`<h2 class="modal-title">${dateStr}</h2>
+    <div class="card-title" style="margin-bottom:12px">Slots – ${window._adminCalLehrerName}</div>
+    ${slotsHtml}`);
 };
 
 window.viewLehrerSchueler = async function(lehrerUid, lehrerName) {
