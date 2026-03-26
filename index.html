@@ -686,15 +686,19 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
     <div class="form-group">
       <label class="form-label">Führerscheinklasse</label>
       <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
-        <button class="scope-btn active" id="klasse-b-btn"    onclick="setKlasse('B')">🚗 Klasse B</button>
-        <button class="scope-btn" id="klasse-bauto-btn" onclick="setKlasse('B-Auto')">🤖 B-Automatik</button>
+        <button class="scope-btn active" id="klasse-b-btn"    onclick="setKlasse('B')">🚗 B</button>
+        <button class="scope-btn" id="klasse-bauto-btn" onclick="setKlasse('B-Auto')">🤖 B-Auto</button>
         <button class="scope-btn" id="klasse-b197-btn"  onclick="setKlasse('B197')">⚙️ B197</button>
-        <button class="scope-btn" id="klasse-be-btn"    onclick="setKlasse('BE')">🚗🔗 BE</button>
-        <button class="scope-btn" id="klasse-a-btn"     onclick="setKlasse('A')">🏍️ Klasse A</button>
+        <button class="scope-btn" id="klasse-be-btn"    onclick="setKlasse('BE')">🔗 BE</button>
+        <button class="scope-btn" id="klasse-a-btn"     onclick="setKlasse('A')">🏍️ A</button>
       </div>
-      <div id="b197-hint" style="display:none;font-size:0.7rem;color:#bc8cff;margin-top:6px;line-height:1.4;background:rgba(160,100,255,0.08);border:1px solid rgba(160,100,255,0.25);border-radius:8px;padding:8px 10px">
-        ⚙️ <strong>Automatik-Prüfung</strong> · min. 10 Schaltstunden (à 45 Min.) · 15-min. Testfahrt (½ innerorts, ½ außerorts)
-      </div>
+      <!-- Klassen-Hinweise -->
+      <div id="klasse-hint-b"     style="display:block;font-size:0.7rem;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:8px">🚗 Standard PKW mit Schaltgetriebe · 30 Fahrstunden</div>
+      <div id="klasse-hint-bauto" style="display:none;font-size:0.7rem;color:var(--muted);margin-top:6px;padding:6px 10px;background:var(--surface2);border-radius:8px">🤖 Nur Automatikfahrzeug · keine Schaltberechtigung · 30 Fahrstunden</div>
+      <div id="klasse-hint-b197"  style="display:none;font-size:0.7rem;color:#bc8cff;margin-top:6px;line-height:1.4;background:rgba(160,100,255,0.08);border:1px solid rgba(160,100,255,0.25);border-radius:8px;padding:8px 10px">⚙️ <strong>Automatik-Prüfung</strong> · min. 10 Schaltstunden (à 45 Min.) · 15-min. Testfahrt (½ innerorts, ½ außerorts)</div>
+      <div id="klasse-hint-be"    style="display:none;font-size:0.7rem;color:var(--accent2);margin-top:6px;padding:6px 10px;background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.25);border-radius:8px">🔗 Anhänger · Voraussetzung: Klasse B vorhanden · keine Theorieprüfung · 3× Überland, 1× Autobahn, 1× Nacht</div>
+      <div id="klasse-hint-a"     style="display:none;font-size:0.7rem;color:var(--blue);margin-top:6px;padding:6px 10px;background:rgba(88,166,255,0.08);border:1px solid rgba(88,166,255,0.25);border-radius:8px">🏍️ Motorrad unbeschränkt · 20 Fahrstunden · Sonderfahrten: 5× Überland, 4× Autobahn, 3× Nacht</div>
+      <div id="b197-hint" style="display:none"></div>
     </div>
     <!-- B197: Ziel-Schaltstunden -->
     <div class="form-group" id="b197-ziel-group" style="display:none">
@@ -1046,15 +1050,30 @@ select.form-input { appearance:none; background-image:url("data:image/svg+xml,%3
 
 <!-- KLASSE ÄNDERN MODAL -->
 <div class="modal-overlay" id="klasse-aendern-modal" onclick="closeModal(event)">
-  <div class="modal-sheet">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
     <div class="sheet-title">✎ Führerscheinklasse ändern</div>
-    <div style="font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:16px">ADK-Lernstand und Pflichtfahrten werden zurückgesetzt</div>
+    <div style="font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:16px;padding:0 4px">ADK-Lernstand und Pflichtfahrten werden zurückgesetzt.<br>Fahrstunden und Protokoll bleiben erhalten.</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-      <button onclick="saveKlasseAendern('B')"      class="klasse-choice-btn">🚗 Klasse B – Standard PKW</button>
-      <button onclick="saveKlasseAendern('B-Auto')" class="klasse-choice-btn">🤖 B-Automatik – Nur Automatikgetriebe</button>
-      <button onclick="saveKlasseAendern('B197')"   class="klasse-choice-btn">⚙️ B197 – Automatik + Schaltkompetenz</button>
-      <button onclick="saveKlasseAendern('BE')"     class="klasse-choice-btn">🔗 BE – Anhängerführerschein</button>
-      <button onclick="saveKlasseAendern('A')"      class="klasse-choice-btn">🏍️ Klasse A – Motorrad</button>
+      <button onclick="saveKlasseAendern('B')" class="klasse-choice-btn">
+        <div style="font-weight:700">🚗 Klasse B</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Standard PKW · Schaltgetriebe · 30 Fahrstunden</div>
+      </button>
+      <button onclick="saveKlasseAendern('B-Auto')" class="klasse-choice-btn">
+        <div style="font-weight:700">🤖 B-Automatik</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Nur Automatikgetriebe · keine Schaltberechtigung · 30 Fahrstunden</div>
+      </button>
+      <button onclick="saveKlasseAendern('B197')" class="klasse-choice-btn">
+        <div style="font-weight:700">⚙️ B197</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Automatik-Prüfung + min. 10 Schaltstunden (45 Min.) + 15-min. Testfahrt</div>
+      </button>
+      <button onclick="saveKlasseAendern('BE')" class="klasse-choice-btn">
+        <div style="font-weight:700">🔗 Klasse BE</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Anhängerführerschein · Voraussetzung: Klasse B · keine Theorieprüfung</div>
+      </button>
+      <button onclick="saveKlasseAendern('A')" class="klasse-choice-btn">
+        <div style="font-weight:700">🏍️ Klasse A</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Motorrad unbeschränkt · 20 Fahrstunden</div>
+      </button>
     </div>
     <button class="btn-sheet-cancel" onclick="document.getElementById('klasse-aendern-modal').classList.remove('open')">Abbrechen</button>
   </div>
@@ -1861,13 +1880,32 @@ function renderDetail() {
     <div class="profile-info">
       <div class="profile-name">${s.vorname} ${s.nachname}</div>
       <div class="profile-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span onclick="openKlasseAendern()" style="background:${badge.color};color:${badge.text};border:1px solid ${badge.border};border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:700;cursor:pointer" title="Klasse ändern">${badge.label} ✎</span>
-        ${a?'<span>'+a+' Jahre</span>':''}${s.geburt?(a?' · ':'')+'Geb. '+formatDate(s.geburt):''}
+        <span style="background:${badge.color};color:${badge.text};border:1px solid ${badge.border};border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:700">${badge.label}</span>
+        ${a?'<span style="font-size:0.72rem;color:var(--muted)">'+a+' Jahre</span>':''}
       </div>
     </div>
     <div style="text-align:right">
       <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:${progressColor(pct)}">${pct}%</div>
       <div style="font-size:0.68rem;color:var(--muted)">Fortschritt</div>
+    </div>`;
+
+  // Klassen-Einstellungs-Block – immer sichtbar
+  const klasseSettingsHTML = `
+    <div class="section-block">
+      <div class="section-header">
+        <div class="section-title">🎓 Führerscheinklasse</div>
+      </div>
+      <div class="section-body" style="padding:12px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <span style="background:${badge.color};color:${badge.text};border:1px solid ${badge.border};border-radius:8px;padding:4px 12px;font-size:0.82rem;font-weight:700">${badge.label}</span>
+            ${isB197 ? `<div style="font-size:0.7rem;color:var(--muted);margin-top:6px">⚙️ Schaltstunden: ${s.schaltstunden||0}/${s.zielSchaltstunden||10} · Testfahrt: ${s.testfahrtBestanden?'✅':'⏳'}</div>` : ''}
+            ${isBE   ? `<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Voraussetzung: Klasse B vorhanden · keine Theorieprüfung</div>` : ''}
+            ${isBAuto? `<div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Nur Automatikgetriebe · keine Schaltberechtigung</div>` : ''}
+          </div>
+          <button onclick="openKlasseAendern()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;white-space:nowrap">✎ Ändern</button>
+        </div>
+      </div>
     </div>`;
 
   const fs=s.fahrstunden||0, ziel=s.zielStunden||30, fsPct=Math.min(Math.round((fs/ziel)*100),100);
@@ -1956,7 +1994,7 @@ function renderDetail() {
       }).join('')}
     </div>` : '';
 
-  document.getElementById('detail-body').innerHTML=`
+  document.getElementById('detail-body').innerHTML= klasseSettingsHTML + `
     <div class="section-block">
       <div class="section-header">
         <div class="section-title">Fahrstunden</div>
@@ -2466,12 +2504,14 @@ window.openAddModal = () => {
   const geb = document.getElementById('inp-geb');
   if (geb) geb.value='';
   newStudentKlasse = 'B';
-  ['b','bauto','b197','be','a'].forEach(k=>{
+  ['b','bauto','b197','be','a'].forEach(k => {
     const btn = document.getElementById(`klasse-${k}-btn`);
     if (btn) btn.classList.remove('active');
+    const hint = document.getElementById(`klasse-hint-${k}`);
+    if (hint) hint.style.display = 'none';
   });
   document.getElementById('klasse-b-btn').classList.add('active');
-  document.getElementById('b197-hint').style.display = 'none';
+  document.getElementById('klasse-hint-b').style.display = 'block';
   document.getElementById('b197-ziel-group').style.display = 'none';
   document.getElementById('inp-schalt-ziel').value = '10';
   document.getElementById('add-modal').classList.add('open');
@@ -2480,15 +2520,18 @@ window.openAddModal = () => {
 
 window.setKlasse = (k) => {
   newStudentKlasse = k;
-  ['b','bauto','b197','be','a'].forEach(id=>{
+  const keyMap = {'B':'b','B-Auto':'bauto','B197':'b197','BE':'be','A':'a'};
+  ['b','bauto','b197','be','a'].forEach(id => {
     const btn = document.getElementById(`klasse-${id}-btn`);
     if (btn) btn.classList.remove('active');
+    const hint = document.getElementById(`klasse-hint-${id}`);
+    if (hint) hint.style.display = 'none';
   });
-  const keyMap = {'B':'b','B-Auto':'bauto','B197':'b197','BE':'be','A':'a'};
-  const btnId = `klasse-${keyMap[k]||k.toLowerCase()}-btn`;
-  const activeBtn = document.getElementById(btnId);
+  const key = keyMap[k] || k.toLowerCase();
+  const activeBtn = document.getElementById(`klasse-${key}-btn`);
   if (activeBtn) activeBtn.classList.add('active');
-  document.getElementById('b197-hint').style.display = k==='B197' ? 'block' : 'none';
+  const activeHint = document.getElementById(`klasse-hint-${key}`);
+  if (activeHint) activeHint.style.display = 'block';
   document.getElementById('b197-ziel-group').style.display = k==='B197' ? 'block' : 'none';
 };
 
