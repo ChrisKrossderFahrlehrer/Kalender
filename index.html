@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Fahrschule Kalender</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -281,7 +284,7 @@
 
   /* ── Toast ── */
   #toast {
-    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    position: fixed; bottom: 24px; right: 24px; z-index: 10000;
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 10px; padding: 14px 20px; max-width: 320px;
     transform: translateY(80px); opacity: 0;
@@ -490,6 +493,151 @@
     border-top-color: var(--accent); border-radius: 50%;
     animation: spin .7s linear infinite; display: inline-block;
   }
+  /* ══════════════════════════════════════
+     MOBILE RESPONSIVE STYLES
+     ══════════════════════════════════════ */
+  @media (max-width: 768px) {
+    #toast { bottom: 90px; right: 12px; left: 12px; max-width: 100%; text-align: center; }
+    /* ── Auth ── */
+    #auth-screen { padding: 20px; align-items: flex-start; padding-top: 40px; min-height: 100dvh; overflow-y: auto; }
+    .auth-box { width: 100%; padding: 28px 20px; }
+
+    /* ── Topbar ── */
+    .topbar { padding: 0 16px; height: 52px; }
+    .topbar-brand { font-size: 17px; }
+    .topbar-user { display: none; }
+    .topbar-role { font-size: 10px; padding: 3px 8px; }
+
+    /* ── Layout: Sidebar wird zur Bottom-Nav ── */
+    .layout { flex-direction: column; }
+    .sidebar {
+      width: 100%; min-height: unset;
+      border-right: none; border-top: 1px solid var(--border);
+      padding: 8px 8px env(safe-area-inset-bottom);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 99;
+      background: var(--surface);
+      display: flex; flex-direction: row; overflow-x: auto;
+      gap: 2px;
+    }
+    .nav-item {
+      flex-direction: column; gap: 3px;
+      padding: 6px 10px; min-width: 60px;
+      font-size: 10px; text-align: center;
+      border-radius: 8px; white-space: nowrap;
+      flex: 1;
+    }
+    .nav-icon { font-size: 18px; width: auto; }
+    .main {
+      padding: 16px 12px;
+      padding-bottom: 90px; /* Platz für Bottom-Nav */
+      overflow-y: auto;
+    }
+
+    /* ── Page Title ── */
+    .page-title { font-size: 22px; margin-bottom: 16px; }
+
+    /* ── Cards ── */
+    .card { padding: 16px; margin-bottom: 12px; }
+
+    /* ── Grid 2 → 1 Spalte ── */
+    .grid-2 { grid-template-columns: 1fr; gap: 0; }
+
+    /* ── Tabellen → Karten ── */
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    td {
+      padding: 6px 12px;
+      border-bottom: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    td:before {
+      content: attr(data-label);
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .03em;
+      min-width: 90px; flex-shrink: 0;
+    }
+    tr {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+      padding: 8px 0;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Kalender ── */
+    .cal-header { flex-wrap: wrap; gap: 10px; }
+    .cal-month { font-size: 18px; }
+    .cal-view-toggle { width: 100%; }
+    .cal-view-btn { flex: 1; }
+    .cal-day { min-height: 52px; padding: 4px; }
+    .cal-day-num { font-size: 11px; }
+    .cal-slot { font-size: 8px; padding: 1px 3px; }
+    .cal-day-label { font-size: 9px; padding: 4px 0; }
+
+    /* ── Modal ── */
+    .modal {
+      width: 100%; max-width: 100%;
+      margin: 0; border-radius: 20px 20px 0 0;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      max-height: 85vh; padding: 24px 20px;
+    }
+    .modal-overlay { align-items: flex-end; }
+
+    /* ── Slot Rows ── */
+    .slot-row { flex-wrap: wrap; gap: 8px; }
+    .slot-time { min-width: unset; font-size: 13px; }
+
+    /* ── Buttons ── */
+    .btn { padding: 9px 14px; font-size: 13px; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; }
+
+    /* ── Auto Card ── */
+    .auto-card { flex-wrap: wrap; }
+
+    /* ── Prüfung Card ── */
+    .pruefung-card { flex-wrap: wrap; gap: 8px; }
+
+    /* ── Warteliste ── */
+    .warteliste-row { flex-wrap: wrap; }
+
+    /* ── Email Banner ── */
+    .email-banner { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .email-banner-input { width: 100%; }
+    .email-banner-input input { width: 100%; }
+
+    /* ── Booking Screen ── */
+    #booking-screen { padding: 20px 12px 100px; }
+    .booking-header { margin-bottom: 20px; }
+    .booking-logo { font-size: 24px; }
+    .booking-card { padding: 18px 14px; }
+
+    /* ── Lehrer Schüler Grid → Stack ── */
+    [style*="grid-template-columns:1fr 1fr 1fr"] {
+      display: flex !important; flex-direction: column; gap: 16px;
+    }
+    [style*="grid-template-columns:1fr 1fr"] {
+      display: flex !important; flex-direction: column; gap: 0;
+    }
+
+    /* ── Auslastung ── */
+    .auslastung-bar-wrap { flex-wrap: wrap; }
+    .auslastung-label { min-width: unset; width: 100%; margin-bottom: 4px; }
+
+    /* ── Type Row ── */
+    .type-row { flex-wrap: wrap; gap: 8px; }
+
+    /* ── Week View ── */
+    .week-cell { height: 36px; }
+    .week-time-label { font-size: 8px; padding-right: 4px; height: 36px; }
+    .week-slot-chip { font-size: 8px; padding: 1px 3px; }
+    .week-col-header { font-size: 10px; padding: 6px 2px; }
+  }
+
+  /* Extra klein (< 380px) */
+  @media (max-width: 380px) {
+    .nav-item { min-width: 50px; font-size: 9px; padding: 5px 6px; }
+    .nav-icon { font-size: 16px; }
+  }
+
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -2978,6 +3126,25 @@ const params = new URLSearchParams(window.location.search);
 if (params.get('schueler') && params.get('lehrer')) {
   showBookingPage(params.get('schueler'), params.get('lehrer'));
 }
+
+// ── Mobile: Tabellen-Zellen mit data-label versehen für Karten-Darstellung ──
+function injectTableLabels() {
+  document.querySelectorAll('table').forEach(table => {
+    const headers = [...table.querySelectorAll('th')].map(th => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach(row => {
+      [...row.querySelectorAll('td')].forEach((td, i) => {
+        if (headers[i]) td.setAttribute('data-label', headers[i]);
+      });
+    });
+  });
+}
+
+// Nach jeder Navigation aufrufen – Original nur einmal speichern
+const _navigateBase = window.navigate;
+window.navigate = function(page) {
+  _navigateBase(page);
+  setTimeout(injectTableLabels, 300);
+};
 </script>
 </body>
 </html>
