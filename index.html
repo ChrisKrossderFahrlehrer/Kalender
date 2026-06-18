@@ -546,9 +546,14 @@ onAuthStateChanged(auth,async user=>{
       if (fsSnap.exists()) fahrschule = fsSnap.data();
     } catch(e) { console.error('Fahrschule laden:', e); }
 
-    // Ist das Kalender-Modul für diese Fahrschule freigeschaltet?
-    if (!fahrschule || fahrschule.kalenderAktiv !== true) {
-      toast('🔒 Kein Zugriff – das Kalender-Modul ist für deine Fahrschule nicht freigeschaltet.','error');
+    // Ist das Kalender-Modul freigeschaltet? Zwei Wege:
+    //   (A) Die FAHRSCHULE ist freigeschaltet → alle ihre Fahrlehrer dürfen rein
+    //   (B) Der Fahrlehrer wurde EINZELN freigeschaltet (users.kalenderAktiv)
+    //       → für eigenständige Fahrlehrer ohne Fahrschule
+    const fahrschuleFrei = fahrschule && fahrschule.kalenderAktiv === true;
+    const einzelFrei     = adkUser.kalenderAktiv === true;
+    if (!fahrschuleFrei && !einzelFrei) {
+      toast('🔒 Kein Zugriff – das Kalender-Modul ist für dich nicht freigeschaltet.','error');
       await signOut(auth); return;
     }
 
