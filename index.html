@@ -524,11 +524,64 @@ onAuthStateChanged(auth,async user=>{
     }else{currentProfile=snap.data();}
     currentRole='superadmin';
   }else{
-    // ── ZUGANGSSPERRE: Der Kalender ist aktuell NUR für den Haupt-Admin freigegeben. ──
-    // Alle anderen werden abgewiesen, bis der Kalender offiziell freigeschaltet wird.
-    toast('🔒 Kein Zugriff – der Kalender ist noch nicht freigegeben.','error');
-    await signOut(auth);
-    return;
+    // ── ZUGANGSSPERRE (Schritt 3): Freigeschaltete Fahrschulen/Fahrlehrer dürfen rein. ──
+    // Geprüft wird über die ADK-Daten: Wer ist der Nutzer (users-Doc) und hat seine
+    // Fahrschule das Kalender-Modul gebucht (fahrschulen.kalenderAktiv === true)?
+    let adkUser = null;
+    try {
+      const adkSnap = await getDoc(doc(db,'users',user.uid));
+      if (adkSnap.exists()) adkUser = adkSnap.data();
+    } catch(e) { console.error('ADK-User laden:', e); }
+
+    if (!adkUser) {
+      toast('🔒 Kein Zugriff – kein Konto gefunden.','error');
+      await signOut(auth); return;
+    }
+
+    // Welche Fahrschule? Bei Inhaber = eigene uid, bei Fahrlehrer = fahrschuleId
+    const fahrschuleId = adkUser.fahrschuleId || user.uid;
+    let fahrschule = null;
+    try {
+      const fsSnap = await getDoc(doc(db,'fahrschulen',fahrschuleId));
+      if (fsSnap.exists()) fahrschule = fsSnap.data();
+    } catch(e) { console.error('Fahrschule laden:', e); }
+
+    // Ist das Kalender-Modul für diese Fahrschule freigeschaltet?
+    if (!fahrschule || fahrschule.kalenderAktiv !== true) {
+      toast('🔒 Kein Zugriff – das Kalender-Modul ist für deine Fahrschule nicht freigeschaltet.','error');
+      await signOut(auth); return;
+    }
+
+    // Freigeschaltet! ADK-Rolle → Kalender-Rolle zuordnen
+    const istInhaber = adkUser.rolle === 'fahrschul-admin' || adkUser.rolle === 'fs_admin';
+    currentRole = istInhaber ? 'admin' : 'lehrer';
+    currentSchoolId = fahrschuleId;
+
+    // Namen aus ADK übernehmen (fname/lname für die Kalender-Oberfläche)
+    const namensteile = (adkUser.name || user.email).split(' ');
+    const fname = namensteile[0] || 'Fahrlehrer';
+    const lname = namensteile.slice(1).join(' ') || '';
+
+    // kalenderUsers-Doc anlegen/aktualisieren (damit der Kalender intern damit arbeiten kann)
+    if (!snap.exists()) {
+      await setDoc(doc(db,'kalenderUsers',user.uid),{
+        uid:user.uid, email:user.email, fname, lname,
+        role:currentRole, approved:true, schoolId:fahrschuleId,
+        createdAt:serverTimestamp()
+      });
+      currentProfile={fname, lname, role:currentRole, schoolId:fahrschuleId};
+    } else {
+      currentProfile=snap.data();
+      // Rolle/Schule aktuell halten, falls sich im Admin was geändert hat
+      currentProfile.role = currentRole;
+      currentProfile.schoolId = fahrschuleId;
+    }
+
+    // Kalender-eigenes School-Objekt laden (für Topbar-Anzeige), falls vorhanden
+    try {
+      const ss=await getDoc(doc(db,'schools',fahrschuleId));
+      currentSchool=ss.exists()?{id:ss.id,...ss.data()}:{id:fahrschuleId,name:fahrschule.name||'Meine Fahrschule'};
+    } catch(e) { currentSchool={id:fahrschuleId,name:fahrschule.name||'Meine Fahrschule'}; }
   }
   const roleLabels={'superadmin':'Super-Admin','admin':'Admin','lehrer':'Fahrlehrer'};
   document.getElementById('topbar-role').textContent=roleLabels[currentRole]||currentRole;
