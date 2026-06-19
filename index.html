@@ -1725,6 +1725,23 @@ async function triggerEmail(type,payload){try{await addDoc(collection(db,'mailQu
 // ════════════════════════════════
 async function showBookingPage(schuelerId,lehrerUid){
   show('booking');
+  // ── SCHÜLER-BUCHUNG (vorerst deaktiviert) ──
+  // Die Online-Selbstbuchung per Link ist aktuell deaktiviert, weil sie
+  // einen sicheren, eng begrenzten Zugriff ohne Login erfordert (kommt als
+  // eigenes Feature). Bis dahin: freundliche Info statt Fehlerseite.
+  const BOOKING_AKTIV = false;
+  if (!BOOKING_AKTIV) {
+    const el = document.getElementById('booking-content');
+    if (el) el.innerHTML = '<div class="booking-card" style="text-align:center;padding:32px 20px">'
+      + '<div style="font-size:2.4rem;margin-bottom:12px">📅</div>'
+      + '<h2 style="margin:0 0 8px;font-size:1.1rem">Terminbuchung bald verfügbar</h2>'
+      + '<p class="text-muted" style="line-height:1.5">Die Online-Buchung wird gerade vorbereitet. '
+      + 'Bitte vereinbare deine Fahrstunden vorerst direkt mit deinem Fahrlehrer.</p>'
+      + '</div>';
+    const sub = document.getElementById('booking-subtitle');
+    if (sub) sub.textContent = '';
+    return;
+  }
   await loadTypes();
   const[scSnap,lSnap]=await Promise.all([getDoc(doc(db,'schueler',schuelerId)),getDoc(doc(db,'kalenderUsers',lehrerUid))]);
   if(!scSnap.exists()||!lSnap.exists()){document.getElementById('booking-content').innerHTML='<div class="booking-card"><p class="text-muted text-center">Ungültiger Link.</p></div>';return;}
